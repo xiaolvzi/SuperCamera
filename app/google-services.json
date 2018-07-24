@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "592125571226",
+    "firebase_url": "https://supercamera-70f62.firebaseio.com",
+    "project_id": "supercamera-70f62",
+    "storage_bucket": "supercamera-70f62.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:592125571226:android:99162407e1c4654f",
+        "android_client_info": {
+          "package_name": "com.example.dell.suppercamera"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "592125571226-k3oi74jl2pbglup96241pcdd3ee4sc6j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3-VljwmGjJbCED0X1ndMoSRqYo__RgjU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
