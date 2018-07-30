@@ -1,6 +1,7 @@
 package com.example.dell.suppercamera;
 
 import android.annotation.SuppressLint;
+import android.hardware.Camera;
 import android.os.Build;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -17,16 +19,21 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
 
     private  CameraPreview mCameraPreview;
+    private Button mButtonCapture,mButtonReverse;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.e("lv","onCreate");
         setContentView(R.layout.activity_main);
 
+
         initCamera();
 
         hideNavigationBar();
+
+
     }
+
 
     private void hideNavigationBar() {
         View decorView = getWindow().getDecorView();
@@ -36,11 +43,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void initCamera() {
-
+        int tempId;
         FrameLayout preview = findViewById(R.id.camera_preview);
 
         boolean b= CameraUtils.checkCameraHardware(this);
         if (b) {
+
             mCameraPreview = new CameraPreview(this);
         }else {
             Toast.makeText(this,"there is no camera in your phone",Toast.LENGTH_SHORT).show();
@@ -52,7 +60,22 @@ public class MainActivity extends AppCompatActivity {
         cameraOptionBar.setGravity(Gravity.BOTTOM);
         preview.addView(cameraOptionBar);
 
+        initView(cameraOptionBar);
+
+
     }
+
+    private void initListener() {
+        MyListener myListener = new MyListener(mCameraPreview);
+        mButtonCapture.setOnClickListener(myListener);
+        mButtonReverse.setOnClickListener(myListener);
+    }
+
+    private void initView(LinearLayout cameraOptionBar) {
+        mButtonCapture = cameraOptionBar.findViewById(R.id.button_capture);
+        mButtonReverse = cameraOptionBar.findViewById(R.id.button_reverse);
+    }
+
 
     @Override
     protected void onResume() {
@@ -60,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT > 19) {
             updateUI();
         }
+        initListener();
         Log.e("lv","onResume");
     }
     @SuppressLint("NewAPi")

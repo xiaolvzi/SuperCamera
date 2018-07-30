@@ -16,11 +16,25 @@ import java.util.List;
 import static android.content.Context.WINDOW_SERVICE;
 
 /** A basic Camera preview class */
-public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
+public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback,IReverseCamera {
     private static final String TAG = "CameraPreview";
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private Context mContext;
+    private int currentCameraId=-1;//front or back Camera
+
+    public Camera getCamera(){
+
+        return mCamera;
+    }
+
+    public int getCurrentCameraId(){
+
+        return currentCameraId;
+    }
+    public void setCurrentCameraId(int id){
+        this.currentCameraId=id;
+    }
     public CameraPreview(Context context) {
         super(context);
         this.mContext=context;
@@ -34,13 +48,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public void surfaceCreated(SurfaceHolder holder) {
         Log.e("lv","surfaceCreated");
+
         int numberOfCameras = Camera.getNumberOfCameras();
-        if (numberOfCameras == 2) {
-            mCamera=Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
-
+        if (mCamera!=null&&currentCameraId!=-1){
+            mCamera=Camera.open(currentCameraId);
         }else {
-            mCamera=Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
-
+            if (numberOfCameras == 2) {
+                mCamera=Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+                currentCameraId=Camera.CameraInfo.CAMERA_FACING_FRONT;
+            }else {
+                mCamera=Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
+                currentCameraId=Camera.CameraInfo.CAMERA_FACING_BACK;
+            }
         }
 
         try {
@@ -70,30 +89,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // set preview size and make any resize, rotate or
         // reformatting changes here
-        Camera.Parameters parameters = mCamera.getParameters();
-
-        List<Camera.Size> allSizes = parameters.getSupportedPictureSizes();
-        Camera.Size size = allSizes.get(0); // get top size
-        for (int i = 0; i < allSizes.size(); i++) {
-            if (allSizes.get(i).width > size.width)
-                size = allSizes.get(i);
-        }
-
-        parameters.setPictureSize(size.width, size.height);
-
-        Display display = ((WindowManager)mContext.getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
-
-        if(display.getRotation() == Surface.ROTATION_0) {
-            mCamera.setDisplayOrientation(90);
-        }
-
-        if(display.getRotation() == Surface.ROTATION_270) {
-
-            mCamera.setDisplayOrientation(180);
-        }
-
-        mCamera.setParameters(parameters);
-
+        rotatePreview();
 
 
         // start preview with new settings
@@ -106,8 +102,34 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
+    private void rotatePreview() {
 
-        public void surfaceDestroyed(SurfaceHolder holder) {
+        Camera.Parameters parameters = mCamera.getParameters();
+
+        List<Camera.Size> allSizes = parameters.getSupportedPictureSizes();
+        Camera.Size size = allSizes.get(0); // get top size
+        for (int i = 0; i < allSizes.size(); i++) {
+            if (allSizes.get(i).width > size.width)
+                size = allSizes.get(i);
+        }
+
+        parameters.setPictureSize(size.width, size.height);
+
+        Display display = ((WindowManager)mContext.getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        if(display.getRotation() == Surface.ROTATION_0) {
+            mCamera.setDisplayOrientation(90);
+        }
+
+        if(display.getRotation() == Surface.ROTATION_270) {
+
+            mCamera.setDisplayOrientation(180);
+        }
+
+        mCamera.setParameters(parameters);
+    }
+
+
+    public void surfaceDestroyed(SurfaceHolder holder) {
         // empty. Take care of releasing the Camera preview in your activity.
         Log.e("lv","surfaceDestroyed");
         mCamera.stopPreview();
@@ -115,4 +137,24 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
 
+    @Override
+    public void reverserCamera() {
+        mCamera.stopPreview();
+        mCamera.release();
+
+        if(currentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK){
+            mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+            this.setCurrentCameraId(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        }else if(currentCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT){
+            mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
+            this.setCurrentCameraId(Camera.CameraInfo.CAMERA_FACING_BACK);
+        }
+        try {
+            rotatePreview();
+            mCamera.setPreviewDisplay(mHolder);
+            mCamera.startPreview();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
