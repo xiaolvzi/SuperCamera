@@ -42,7 +42,9 @@ public class PictureActivity extends AppCompatActivity {
 
     private void initData() {
         File file = new File(getCacheDir(), "text.jpg");
-        mOriginBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        mOriginBitmap = BitmapFactory.decodeFile(file.getAbsolutePath(),options);
         mOriginImage.setImageBitmap(rotateBitmapByDegree(mOriginBitmap,getBitmapDegree(file.getAbsolutePath())));
 
     }
@@ -97,7 +99,7 @@ public class PictureActivity extends AppCompatActivity {
     }
 
     public void onGaussianBlur(View view) {
-         mOriginMat = new Mat(mOriginBitmap.getHeight(), mOriginBitmap.getWidth(), CvType.CV_8UC4);
+        mOriginMat = new Mat(mOriginBitmap.getHeight(), mOriginBitmap.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(mOriginBitmap,mOriginMat);
         mDestMat=new Mat(mOriginBitmap.getHeight(), mOriginBitmap.getWidth(), CvType.CV_8UC4);
         Imgproc.GaussianBlur(mOriginMat,mDestMat,new Size(3,3),0);
