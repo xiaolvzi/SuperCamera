@@ -16,10 +16,31 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.InstallCallbackInterface;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+
 public class MainActivity extends AppCompatActivity {
 
+
+    private static final String TAG = "MainActivity";
     private  CameraPreview mCameraPreview;
     private Button mButtonCapture,mButtonReverse;
+    private BaseLoaderCallback mLoaderCallback= new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                    Log.e(TAG, "OpenCV init success");
+                    break;
+                    default:
+                    super.onManagerConnected(status);
+                        break;
+
+            }
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,10 +48,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        initOpenCV();
         initCamera();
 
         hideNavigationBar();
 
+
+    }
+
+    private void initOpenCV() {
+
+        if (!OpenCVLoader.initDebug()) {
+            Log.e(TAG, "OpenCV init fail");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback);
+        } else {
+            Log.e(TAG, "OpenCV init success");
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
 
     }
 
@@ -66,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initListener() {
-        MyListener myListener = new MyListener(mCameraPreview);
+        MyListener myListener = new MyListener(mCameraPreview,this);
         mButtonCapture.setOnClickListener(myListener);
         mButtonReverse.setOnClickListener(myListener);
     }

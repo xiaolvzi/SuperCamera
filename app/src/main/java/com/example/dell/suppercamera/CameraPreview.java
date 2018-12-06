@@ -1,31 +1,40 @@
 package com.example.dell.suppercamera;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.nfc.Tag;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Display;
+import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import static android.content.Context.WINDOW_SERVICE;
 
 /** A basic Camera preview class */
-public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback,IReverseCamera {
+public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback,IReverseCamera,Camera.PreviewCallback {
     private static final String TAG = "CameraPreview";
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private Context mContext;
     private int currentCameraId=-1;//front or back Camera
+    private IOrientationEventListener mIOrientationEventListener;
 
     public Camera getCamera(){
 
-        return mCamera;
+        return mCamera==null?Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT):mCamera;
     }
 
     public int getCurrentCameraId(){
@@ -44,10 +53,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mHolder.addCallback(this);
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        mIOrientationEventListener = new IOrientationEventListener(context);
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
         Log.e("lv","surfaceCreated");
+        mIOrientationEventListener.enable();
 
         int numberOfCameras = Camera.getNumberOfCameras();
         if (mCamera!=null&&currentCameraId!=-1){
@@ -64,6 +75,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         try {
             mCamera.setPreviewDisplay(holder);
+            mCamera.setPreviewCallback(this);
             mCamera.startPreview();
         } catch (Exception e) {
             Log.e(TAG, "Cannot start preview", e);
@@ -134,6 +146,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Log.e("lv","surfaceDestroyed");
         mCamera.stopPreview();
         mCamera.release();
+        mIOrientationEventListener.disable();
     }
 
 
@@ -157,4 +170,73 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             e.printStackTrace();
         }
     }
+
+    public void takePicture() {
+        mCamera.takePicture(null, null, mPicture);
+    }
+
+    private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
+
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+            Log.e(TAG, "Getting output media file");
+            File pictureFile = getOutputMediaFile();
+            if (pictureFile == null) {
+                Log.e(TAG, "Error creating output file");
+                return;
+            }
+            try {
+                FileOutputStream fos = new FileOutputStream(pictureFile);
+                fos.write(data);
+                fos.close();
+                mContext.startActivity(new Intent(mContext,PictureActivity.class));
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, e.getMessage());
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+
+
+        }
+    };
+
+    private  File getOutputMediaFile() {
+        File path = mContext.getCacheDir();
+        return new File(path, "text.jpg");
+    }
+
+    @Override
+    public void onPreviewFrame(byte[] data, Camera camera) {
+
+
+    }
+
+
+    public class IOrientationEventListener extends OrientationEventListener {
+        public IOrientationEventListener(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onOrientationChanged(int orientation) {
+            if (ORIENTATION_UNKNOWN == orientation) {
+                return;
+            }
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(currentCameraId, info);
+            orientation = (orientation + 45) / 90 * 90;
+            int rotation = 0;
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                rotation = (info.orientation - orientation + 360) % 360;
+            } else {
+                rotation = (info.orientation + orientation) % 360;
+            }
+            if (null != mCamera) {
+                Camera.Parameters parameters = mCamera.getParameters();
+                parameters.setRotation(rotation);
+                mCamera.setParameters(parameters);
+            }
+        }
+    }
+
 }
