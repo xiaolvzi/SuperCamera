@@ -10,10 +10,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
+import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
@@ -99,11 +101,15 @@ public class PictureActivity extends AppCompatActivity {
     }
 
     public void onGaussianBlur(View view) {
-        mOriginMat = new Mat(mOriginBitmap.getHeight(), mOriginBitmap.getWidth(), CvType.CV_8UC4);
-        Utils.bitmapToMat(mOriginBitmap,mOriginMat);
-        mDestMat=new Mat(mOriginBitmap.getHeight(), mOriginBitmap.getWidth(), CvType.CV_8UC4);
-        Imgproc.GaussianBlur(mOriginMat,mDestMat,new Size(3,3),0);
-        Utils.matToBitmap(mDestMat,mDestBitmap);
+
+        File file = new File(getCacheDir(), "text.jpg");
+        mOriginMat = Imgcodecs.imread(file.getAbsolutePath());
+        mDestMat=new Mat(mOriginMat.rows(), mOriginMat.cols(), CvType.CV_8UC4);
+
+        Imgproc.GaussianBlur(mOriginMat,mDestMat,new Size(15,15),6);
+        mDestBitmap = Bitmap.createBitmap(mOriginMat.cols(), mOriginMat.rows(), Bitmap.Config.RGB_565);
+        Utils.matToBitmap(mOriginMat,mDestBitmap);
+        mDestBitmap = rotateBitmapByDegree(mDestBitmap, 270);
         mDestImage.setImageBitmap(mDestBitmap);
     }
 }

@@ -13,6 +13,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -54,6 +55,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mIOrientationEventListener = new IOrientationEventListener(context);
+
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
@@ -77,6 +79,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.setPreviewDisplay(holder);
             mCamera.setPreviewCallback(this);
             mCamera.startPreview();
+            mCamera.cancelAutoFocus();
         } catch (Exception e) {
             Log.e(TAG, "Cannot start preview", e);
         }
@@ -126,6 +129,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
 
         parameters.setPictureSize(size.width, size.height);
+        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 
         Display display = ((WindowManager)mContext.getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
         if(display.getRotation() == Surface.ROTATION_0) {
