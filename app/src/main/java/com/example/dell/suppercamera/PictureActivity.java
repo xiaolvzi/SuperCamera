@@ -104,9 +104,11 @@ public class PictureActivity extends AppCompatActivity {
 
         File file = new File(getCacheDir(), "text.jpg");
         mOriginMat = Imgcodecs.imread(file.getAbsolutePath());
+        Imgproc.cvtColor(mOriginMat,mOriginMat,Imgproc.COLOR_BGR2RGB);
+
         mDestMat=new Mat(mOriginMat.rows(), mOriginMat.cols(), CvType.CV_8UC4);
 
-        Imgproc.GaussianBlur(mOriginMat,mDestMat,new Size(15,15),6);
+        Imgproc.GaussianBlur(mOriginMat,mDestMat,new Size(0,0),8);
         mDestBitmap = Bitmap.createBitmap(mOriginMat.cols(), mOriginMat.rows(), Bitmap.Config.RGB_565);
         Utils.matToBitmap(mOriginMat,mDestBitmap);
         mDestBitmap = rotateBitmapByDegree(mDestBitmap, 270);
