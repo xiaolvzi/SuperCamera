@@ -24,7 +24,11 @@
             android:layout_height="wrap_content"
             android:text="gaussian blur"
             android:onClick="onGaussianBlur"/>
-
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="boundary"
+            android:onClick="onBoundary"/>
     </LinearLayout>
 
 
